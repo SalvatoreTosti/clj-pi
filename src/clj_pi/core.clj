@@ -2,23 +2,26 @@
   (:gen-class))
 
 (defn sum-component
-  [i numer denom-add]
-   (with-precision (+ i 10) (/ numer (+ denom-add (* 8 i)))))
+  [precision i numer denom-add]
+   (with-precision precision (/ numer (+ denom-add (* 8 i)))))
 
 (defn sub-component
-  [i]
-    (-> (sum-component i 4M 1)
-        (- (sum-component i 2M 4))
-        (- (sum-component i 1M 5))
-        (- (sum-component i 1M 6))))
+  [precision i]
+    (-> (sum-component precision i 4M 1)
+        (- (sum-component precision i 2M 4))
+        (- (sum-component precision i 1M 5))
+        (- (sum-component precision i 1M 6))))
 
 (defn pi-nth
   [n]
-  (-> (reduce + (map (fn [i]  (with-precision (+ i 10) (*
-                                                      (with-precision (+ i 10) (/ 1  (with-precision (+ i 10) (.pow (bigdec 16) i))))
-                                                      (sub-component i)))) (range 0 100)))
-    (str)
-    (subs 2)
-    (#(str "3" %))
-    (nth (dec n))
-    (str)))
+  (let [precision (+ n 10)]
+    (-> (reduce + (map (fn [i]
+                         (*
+                          (/ 1M  (.pow 16M i))
+                          (sub-component precision i)))
+                       (range 0 precision)))
+        (str)
+        (subs 2)
+        (#(str "3" %))
+        (nth (dec n))
+        (str))))
